@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GUNGO • Urbano</title>
+    <link rel="icon" type="image/png" href="logo-gungo3.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="gungo.css">
+</head>
+<body>
+
+<header>
+    <div class="navbar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; position: relative;">
+        <div style="width: 120px;"></div> 
+        <div class="logo-container" style="position: absolute; left: 50%; transform: translateX(-50%);">
+            <a href="index.html" class="logo-link">
+                <img src="logo-gungo.png" alt="GUNGO">
+            </a>
+        </div>
+        <div class="nav-actions" style="width: 120px; display: flex; justify-content: flex-end;">
+            <a href="index.html" style="color: var(--brand-yellow); text-decoration: none; font-weight: 800;">← VOLVER</a>
+        </div>
+    </div>
+</header>
+
+<section class="hero" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1974') center/cover;">
+    <div class="hero-content">
+        <h1>Gungo Urbano</h1> 
+        <p>El pulso de la calle, el género y el movimiento.</p>
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Lo más Trendy</h2>
+    <div class="news-grid" id="urbano-grid">
+    </div>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>© 2026 GUNGO URBANO • Todos los derechos reservados</p>
+    </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+    // 1. CONFIGURACIÓN FIREBASE (Conexión Segura)
+    var firebaseConfig = {
+        apiKey: "AIzaSyBv849w6NNk_4QhOnaY3x7LOE38apvc6o4",
+        authDomain: "gungo-tv.firebaseapp.com",
+        projectId: "gungo-tv",
+        storageBucket: "gungo-tv.firebasestorage.app",
+        messagingSenderId: "132166094948",
+        appId: "1:132166094948:web:0ca391d2dc20306e85cf71",
+        measurementId: "G-MFNZH83Y1X"
+    };
+
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    var db = firebase.firestore();
+
+    document.addEventListener("DOMContentLoaded", () => {
+        
+        // ==========================================
+        // MOTOR 1: CARGA DE NOTICIAS "URBANO"
+        // ==========================================
+        db.collection("noticias")
+          .where("category", "==", "Urbano")
+          .orderBy("publishedAt", "desc")
+          .get()
+          .then((snapshot) => {
+              const grid = document.getElementById('urbano-grid');
+              if (snapshot.empty) {
+                  grid.innerHTML = "<div style='text-align:center; width:100%; grid-column: 1/-1; padding: 40px; background: #111; border-radius: 20px; border: 1px dashed #FFEB3B;'><h3 style='color:#FFEB3B;'>🔥 Preparando las exclusivas del género...</h3><p style='color:#ccc;'>Nuestros periodistas están redactando lo último del movimiento.</p></div>";
+              } else {
+                  snapshot.forEach(doc => {
+                      const news = doc.data();
+                      const card = document.createElement('div');
+                      card.className = 'news-card visible';
+                      
+                      let textoLimpio = news.summary ? news.summary.replace(/<[^>]*>?/gm, '') : '';
+                      
+                      card.innerHTML = `
+                          <span class="category-tag" style="background: linear-gradient(90deg, #E1306C, #FFEB3B);">#Movimiento</span>
+                          <img src="${news.image}" alt="${news.title}" loading="lazy" style="aspect-ratio: 16/9; object-fit: cover; width: 100%;">
+                          <div class="card-content">
+                              <h3 class="card-title-fix">${news.title}</h3>
+                              <p class="summary-text">${textoLimpio}</p>
+                              <div class="reaction-bar">
+                                  <button class="reaction-btn" onclick="this.classList.toggle('active')">🔥 Flow</button>
+                              </div>
+                          </div>
+                      `;
+                      grid.appendChild(card);
+                  });
+              }
+          })
+          .catch(err => console.error("Error cargando noticias urbanas:", err));
+    });
+</script>
+
+</body>
+</html>
