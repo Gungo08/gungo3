@@ -461,6 +461,151 @@ window.sendGungoMessage = function() {
     input.value = "";
 };
 
+  // ========================================================
+// 🎤 MENSAJES DE VOZ ENCRIPTADOS - MANEJO INTELIGENTE DE MICRÓFONO BLOQUEADO
+// ========================================================
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let currentStream = null;
+let recordingTimer = null;
+let lastRecordingTime = 0;
+let sessionKey = null;
+
+async function getSessionKey() {
+    if (!sessionKey) {
+        sessionKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+    }
+    return sessionKey;
+}
+
+// === NUEVA FUNCIÓN: Verifica permiso ANTES de intentar ===
+async function checkMicrophonePermission() {
+    if (!navigator.permissions) return { state: "prompt" }; // navegador viejo
+
+    try {
+        const permission = await navigator.permissions.query({ name: "microphone" });
+        return permission;
+    } catch (e) {
+        return { state: "prompt" };
+    }
+}
+
+window.toggleVoiceRecording = async function() {
+    const btn = document.querySelector('.voice-btn-center');
+    const user = localStorage.getItem('gungo_user');
+
+    if (!user) {
+        window.showToast("Debes iniciar sesión para grabar voz");
+        window.openAuthModal();
+        return;
+    }
+
+    if (isRecording) {
+        stopRecording();
+        return;
+    }
+
+         // === VERIFICACIÓN INTELIGENTE DE MICRÓFONO (mensaje corto y claro) ===
+    const perm = await checkMicrophonePermission();
+
+    if (perm.state === "denied") {
+        window.showToast("🎤 Micrófono BLOQUEADO\n\n" +
+            "Toca el icono de micrófono/cámara en la barra de direcciones de Chrome/Edge y selecciona \"Permitir\".\n\n" +
+            "Luego vuelve a pulsar el botón 🎤");
+        
+        if (btn) {
+            btn.style.opacity = "0.6";
+            btn.style.cursor = "not-allowed";
+            setTimeout(() => {
+                if (btn && !isRecording) {
+                    btn.style.opacity = "1";
+                    btn.style.cursor = "pointer";
+                }
+            }, 8000);
+        }
+        return;
+    }
+
+    // Cooldown
+    if (Date.now() - lastRecordingTime < 8000) {
+        window.showToast("Espera 8 segundos entre grabaciones");
+        return;
+    }
+
+    // === Proceder normal ===
+    navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 } 
+    })
+    .then(stream => {
+        currentStream = stream;
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            const encrypted = await encryptBlob(audioBlob);
+            sendEncryptedVoiceMessage(encrypted);
+            cleanupMemory();
+        };
+
+        mediaRecorder.start(1000);
+        isRecording = true;
+        lastRecordingTime = Date.now();
+
+        let seconds = 0;
+        if (btn) btn.innerHTML = `⏹️ Grabando <span id="voice-timer">00:00</span>`;
+        
+        recordingTimer = setInterval(() => {
+            seconds++;
+            const min = String(Math.floor(seconds/60)).padStart(2,'0');
+            const sec = String(seconds % 60).padStart(2,'0');
+            const timerEl = document.getElementById('voice-timer');
+            if (timerEl) timerEl.textContent = `${min}:${sec}`;
+            if (seconds >= 30) stopRecording();
+        }, 1000);
+
+        window.showToast("🎤 Grabando (encriptado AES-GCM)...");
+    })
+    .catch(err => {
+        if (err.name === "NotAllowedError") {
+            window.showToast("Permiso denegado. Toca el icono de micrófono en la barra de direcciones y permite el acceso.");
+        } else if (err.name === "NotFoundError") {
+            window.showToast("No se detectó micrófono. Conecta auriculares o verifica en ajustes del dispositivo.");
+        } else {
+            window.showToast("Error al acceder al micrófono. Intenta en Chrome o Edge.");
+        }
+        console.error("Mic error:", err.name, err.message);
+    });
+};
+
+// (El resto de funciones: encryptBlob, sendEncryptedVoiceMessage, playEncryptedVoice, decryptAudio, stopRecording y cleanupMemory permanecen IGUALES que en la versión anterior)
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+    if (recordingTimer) clearInterval(recordingTimer);
+    isRecording = false;
+    const btn = document.querySelector('.voice-btn-center');
+    if (btn) {
+        btn.innerHTML = '🎤 Grabar voz';
+        btn.style.opacity = "1";
+    }
+}
+
+function cleanupMemory() {
+    if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+}
+
+// Limpieza total
+window.addEventListener('beforeunload', () => {
+    if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+    if (recordingTimer) clearInterval(recordingTimer);
+});
+
 /* =======================================================
    MOTOR DE DATOS FINANCIEROS
    ======================================================= */
@@ -575,4 +720,87 @@ document.addEventListener('mousemove', (e) => {
 
   if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", start); } 
   else { start(); }
+
+  // ========================================================
+// 🎥 MURO VIRAL DRAGGABLE - VIDEO MOSAIC (Última generación)
+// ========================================================
+const mosaicVideos = [
+    { id: "dQw4w9wgxcq", title: "Karol G - Último hit 🔥" },     // reemplaza con IDs reales de farándula
+    { id: "pHd_obdi9oE", title: "Chisme del momento RD" },
+    { id: "I0K_Eorx7yY", title: "Urbano en vivo" },
+    { id: "3JZ_D3ELwOQ", title: "Polémica de la semana" }
+    // Agrega más (10-15) para que sea adictivo
+];
+
+function renderVideoMosaic() {
+    const container = document.getElementById('video-mosaic');
+    if (!container) return;
+
+    // Cargar orden guardado del usuario
+    let order = JSON.parse(localStorage.getItem('gungo_mosaic_order') || '[]');
+    if (order.length !== mosaicVideos.length) order = mosaicVideos.map((_, i) => i);
+
+    container.innerHTML = '';
+    order.forEach((idx, pos) => {
+        const video = mosaicVideos[idx];
+        const tile = document.createElement('div');
+        tile.className = 'video-tile';
+        tile.draggable = true;
+        tile.dataset.index = idx;
+
+        tile.innerHTML = `
+            <iframe src="https://www.youtube.com/embed/${video.id}?autoplay=0&mute=1&loop=1&playlist=${video.id}&controls=0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+        `;
+
+        // Drag & Drop nativo
+        tile.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', tile.dataset.index);
+            tile.style.opacity = '0.6';
+        });
+        tile.addEventListener('dragend', () => tile.style.opacity = '1');
+        tile.addEventListener('dragover', e => e.preventDefault());
+        tile.addEventListener('drop', e => {
+            e.preventDefault();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIndex = parseInt(tile.dataset.index);
+            reorderMosaic(fromIndex, toIndex);
+        });
+
+        container.appendChild(tile);
+    });
+}
+
+function reorderMosaic(from, to) {
+    let order = JSON.parse(localStorage.getItem('gungo_mosaic_order') || JSON.stringify(mosaicVideos.map((_,i)=>i)));
+    const [moved] = order.splice(from, 1);
+    order.splice(to, 0, moved);
+    localStorage.setItem('gungo_mosaic_order', JSON.stringify(order));
+    renderVideoMosaic();
+}
+
+window.shareMyMosaic = function() {
+    const text = `🔥 Mira MI MURO VIRAL personalizado en GungoTV: https://gungotv.vercel.app`;
+    if (navigator.share) navigator.share({ title: "Mi Muro Viral", text });
+    else {
+        navigator.clipboard.writeText(text);
+        window.showToast("¡Enlace copiado! Pégalo en tus stories 🔥");
+    }
+};
+
+window.resetMosaic = function() {
+    localStorage.removeItem('gungo_mosaic_order');
+    renderVideoMosaic();
+    window.showToast("Muro reiniciado ✅");
+};
+
+// AUTO-RENDER cuando cargue la página
+document.addEventListener("DOMContentLoaded", () => {
+    renderVideoMosaic();
+});
+
+
 })();
+
+
