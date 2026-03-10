@@ -10,6 +10,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="gungo.css">
+    <style>
+        /* ========================================================
+           BLINDAJE MÓVIL PARA BOTONES DE CABECERA (PRODUCCIÓN)
+           ======================================================== */
+        @media (max-width: 600px) {
+            header {
+                padding: 10px 2% !important;
+            }
+            header .filter-btn {
+                font-size: 0.65rem !important; /* Texto mucho más pequeño */
+                padding: 8px 10px !important; /* Reducción drástica del relleno */
+                gap: 4px !important;
+                letter-spacing: -0.5px !important; /* Acerca un poco las letras */
+            }
+            .logo-container img {
+                max-height: 35px !important; /* Logo más compacto para dar espacio */
+            }
+            /* Ocultar los emojis/iconos en pantallas muy estrechas para que quepa el texto */
+            @media (max-width: 380px) {
+                header .filter-btn i, 
+                header .filter-btn {
+                    font-size: 0.6rem !important;
+                    padding: 6px 8px !important;
+                }
+            }
+        }
+    </style>
+</head>
 </head>
 <body>
 
@@ -250,3 +278,4 @@
 
 </body>
 </html>
+
