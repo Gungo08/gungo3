@@ -7,7 +7,7 @@ const CANALES_OFICIALES = {
     nfl: "UCDVYQ4Zhbm3S2dlz7P1GBDg",      // NFL Oficial
     mlb: "UC08mnbiC4FykqpHqbEWgFcg",      // MLB Oficial
     nba: "UCWJ2lWNubArHWmf3FIHbfcQ",      // NBA Oficial
-    futbol: " ",   // Fútbol (Tu canal elegido)
+    futbol: "UCpcTrCXblq78GZrTUTLWeBw",   // Fútbol (Tu canal elegido)
     nhl: "UCe1MWsy0RHgxEM4kbsjLtbA",      // NHL Oficial
     voleibol: "UCGP7V-7K1xVb1eE3b2iNXXg", // Volleyball World
     tenis: "UC-2hhqBG5Su7s91_HmhaODQ",    // ATP Tour
@@ -118,4 +118,5 @@ window.reproducirVideoAPI = function(videoId, titulo) {
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(renderizarDeportes, 1000); 
+
 });
