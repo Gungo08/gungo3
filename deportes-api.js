@@ -5,7 +5,7 @@
 
     // 1. INICIALIZACIÓN DE FIREBASE (Esencial para que funcione la base de datos)
     var firebaseConfig = {
-        apiKey: "AIzaSyBv849w6NNk_4QhOnaY3x7LOE38apvc6o4",
+        apiKey: "AIzaSyCumX5UWoZEgxz7iOOOR9OXQGG2YWDX7ik",
         authDomain: "gungo-tv.firebaseapp.com",
         projectId: "gungo-tv",
         storageBucket: "gungo-tv.firebasestorage.app",
@@ -220,5 +220,6 @@
     document.addEventListener("DOMContentLoaded", () => {
         window.checkCookieConsent();
     });
+
 
 })(); // <-- CIERRE DEL ESCUDO DE SEGURIDAD
