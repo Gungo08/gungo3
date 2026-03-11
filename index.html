@@ -15,15 +15,14 @@
     /* ========================================================
        🛡️ ESTRUCTURA DE CABECERA FLOTANTE PRO (PRODUCCIÓN)
        ======================================================== */
-    
-    /* 1. Header transparente para mantener el efecto flotante */
     header {
         width: 100%;
         display: block;
         position: relative;
         z-index: 1000;
-        background: transparent !important; /* Quita el cuadro negro sólido */
-        padding: 15px 5%;
+        background: transparent !important; 
+        /* El tercer valor (30px) asegura la distancia entre botones y el sintillo */
+        padding: 15px 5% 30px 5%; 
         box-sizing: border-box;
     }
 
@@ -43,7 +42,7 @@
     .top-logo-zone img {
         max-height: 65px;
         transition: 0.3s;
-        filter: drop-shadow(0px 4px 10px rgba(0,0,0,0.8)); /* Resalta el logo sin usar fondos */
+        filter: drop-shadow(0px 4px 10px rgba(0,0,0,0.8)); 
     }
 
     /* 2. Contenedor de botones sin fondo */
@@ -62,13 +61,13 @@
         color: #fff;
         border-radius: 50px;
         font-weight: 800;
-        background: rgba(10, 10, 10, 0.85); /* Fondo oscuro semitransparente solo en el botón */
+        background: rgba(10, 10, 10, 0.85); 
         backdrop-filter: blur(5px);
         white-space: nowrap;
         display: flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.6); /* Sombra para que floten */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6); 
         transition: 0.3s;
     }
 
@@ -77,54 +76,72 @@
         color: #000;
     }
 
+    /* 4. SINTILLO DE CRIPTOS (FRONTERAS Y ACELERACIÓN) */
+    .market-ticker {
+        display: block;
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        overflow: hidden; /* VITAL: Mantiene el texto dentro de su carril */
+        background: #080808; /* Fondo sólido oscuro para separarlo visualmente */
+        border-top: 1px solid rgba(255, 235, 59, 0.25); /* Borde sutil superior amarillo */
+        border-bottom: 1px solid rgba(255, 235, 59, 0.25); /* Borde sutil inferior amarillo */
+        padding: 10px 0; /* Engrosa un poco la barra */
+        clear: both; 
+    }
+
+    .ticker-track {
+        display: flex;
+        white-space: nowrap;
+        /* ACELERACIÓN POR HARDWARE: Obliga al celular a usar su tarjeta gráfica */
+        transform: translate3d(0, 0, 0); 
+        will-change: transform;
+    }
+
     /* 📱 MAGIA PARA DISPOSITIVOS MÓVILES */
     @media (max-width: 768px) {
         header {
-            padding: 15px 20px !important;
+            /* 35px de aire puro entre los botones y la línea del sintillo */
+            padding: 15px 20px 30px 20px !important; 
         }
 
         .top-navbar-gungo {
-            flex-direction: column; /* Apila de arriba hacia abajo */
+            flex-direction: column; 
             align-items: center;
-            gap: 18px; /* Espacio perfecto entre el logo y los botones */
+            gap: 22px; /* Separación exacta entre el logo y los botones */
         }
 
-        /* Logo centrado */
         .top-logo-zone {
             width: 100%;
             justify-content: center;
         }
 
-        /* Botones: Uno a la izquierda, otro a la derecha */
         .top-btn-container {
             width: 100%;
             flex-direction: row; 
-            justify-content: space-between; /* Empuja un botón a cada extremo */
+            justify-content: space-between; 
             gap: 10px;
         }
 
         .btn-top-gungo {
-            width: 48%; /* Cada botón toma casi la mitad, dejando un respiro en el medio */
-            justify-content: center; /* Centra el texto y el ícono dentro del botón */
+            width: 48%; 
+            justify-content: center; 
             padding: 12px 5px;
             font-size: 0.75rem;
             letter-spacing: -0.3px;
+        }
+
+        /* 🏎️ ACELERADOR MÓVIL DEL SINTILLO */
+        .ticker-track {
+            /* Forzamos la velocidad a 10 segundos, cruzará la pantalla volando */
+            animation-duration: 10s !important; 
         }
     }
 
     /* Celulares muy pequeños (Pantallas estrechas) */
     @media (max-width: 380px) {
-        .btn-text-hide { display: none; } /* Oculta "& REDES" para evitar que el texto rompa el botón */
+        .btn-text-hide { display: none; } 
         .btn-top-gungo { font-size: 0.65rem; padding: 10px 5px; }
-    }
-
-    /* 4. Sintillo de Criptomonedas obligado a bajar */
-    .market-ticker {
-        display: block;
-        position: relative;
-        z-index: 10;
-        margin-top: 15px; /* Separación con los botones flotantes */
-        clear: both; /* Asegura que no suba a los lados */
     }
 </style>
 </head>
