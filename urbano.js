@@ -300,6 +300,9 @@
             } else {
                 grid.innerHTML = '';
                 allNews.forEach((news, index) => {
+                    if (typeof window.sincronizarContadoresGungo === 'function') {
+                     window.sincronizarContadoresGungo('interacciones_urbano');
+                      }
                     const card = document.createElement('div');
                     card.className = 'news-card scroll-anim'; 
                     

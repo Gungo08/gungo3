@@ -194,6 +194,9 @@
         }
 
         grid.innerHTML = htmlFinal;
+         if (typeof window.sincronizarContadoresGungo === 'function') {
+         window.sincronizarContadoresGungo('interacciones_deportes');
+         }
         if (typeof safeFilter === 'function') safeFilter('all'); 
     }
 
