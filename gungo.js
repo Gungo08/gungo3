@@ -310,42 +310,80 @@
             </div>
         `).join('');
     }
+       
+     // ========================================================
+// 📊 MOTOR DE ENCUESTAS (RENDERIZADO Y MATEMÁTICA EN VIVO)
+// ========================================================
+function initPoll(data) {
+    const title = document.querySelector('.poll-title-text');
+    const optsContainer = document.querySelector('.poll-options');
+    
+    if (title) title.innerText = data.question;
 
-    function initPoll(data) {
-        const title = document.querySelector('.poll-title-text');
-        const optsContainer = document.querySelector('.poll-options');
-        if (title) title.innerText = data.question;
-        if (optsContainer && data.options) {
-            optsContainer.innerHTML = data.options.map(opt => `
-                <div class="poll-option" onclick="window.votePoll(${opt.id}, this)">
-                    <span class="poll-text">${opt.text}</span>
-                    <div class="poll-bar" id="bar-${opt.id}"></div>
-                    <span class="poll-percent" id="percent-${opt.id}"></span>
+    if (optsContainer && data.options) {
+        // 1. Calculamos el total de votos que vienen de tu data.json
+        let totalVotos = data.options.reduce((acc, opt) => acc + (opt.votes || 0), 0);
+        if (totalVotos === 0) totalVotos = 1; // Seguridad matemática para no dividir por cero
+
+        // 2. Dibujamos los botones con la barra llena a la medida correcta
+        optsContainer.innerHTML = data.options.map(opt => {
+            let porcentaje = Math.round(((opt.votes || 0) / totalVotos) * 100);
+            return `
+                <div class="poll-option" onclick="window.votePoll(${opt.id}, this)" style="cursor: pointer; position: relative; background: #1a1a1a; border: 1px solid #FFEB3B; margin-bottom: 10px; border-radius: 5px; overflow: hidden; padding: 10px;">
+                    <div class="poll-bar" id="bar-${opt.id}" style="position: absolute; top: 0; left: 0; height: 100%; background: rgba(255, 235, 59, 0.2); width: ${porcentaje}%; transition: width 0.5s ease;"></div>
+                    
+                    <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="poll-text" style="color: #fff;">${opt.text}</span>
+                        <span class="poll-percent" id="percent-${opt.id}" style="color: #FFEB3B; font-weight: 900;">${porcentaje}% (${opt.votes || 0})</span>
+                    </div>
                 </div>
-            `).join('');
-        }
+            `;
+        }).join('');
     }
+}
 
-    // MOTOR DE VOTACIÓN BLINDADO EN LA NUBE
-    window.votePoll = async function(id, elementoOpcion) {
-        if (elementoOpcion.classList.contains('procesando')) return;
-        elementoOpcion.classList.add('procesando');
+  // 1. VARIABLE GLOBAL (El cerebro que guarda el ID dinámico)
+window.idEncuestaActiva = 'encuesta_semanal_01'; // Se sobrescribe al cargar el JSON
 
-        const exito = await window.registrarInteraccionSegura('encuestas', 'encuesta_semanal_01', 'opcion_' + id);
-        
-        if (exito) {
-            // Simulamos el movimiento de las barras visualmente tras éxito
-            const results = id === 0 ? [75, 25] : [45, 55];
-            ['0', '1'].forEach((idx) => {
-                const bar = document.getElementById(`bar-${idx}`);
-                const pct = document.getElementById(`percent-${idx}`);
-                if (bar) bar.style.width = results[idx] + '%';
-                if (pct) pct.innerText = results[idx] + '%';
-            });
-            window.showToast("✅ ¡Gracias por tu voto en la nube!");
-        }
-        elementoOpcion.classList.remove('procesando');
-    };
+// MOTOR DE VOTACIÓN BLINDADO EN LA NUBE (Dinámico)
+window.votePoll = async function(id, elementoOpcion) {
+    if (elementoOpcion.classList.contains('procesando')) return;
+    elementoOpcion.classList.add('procesando');
+
+    // 🚀 MAGIA: Reemplazamos el texto fijo por la variable window.idEncuestaActiva
+    // Si cambias el ID en el JSON, Firebase creará un documento nuevo desde cero.
+    const exito = await window.registrarInteraccionSegura('encuestas', window.idEncuestaActiva, 'opcion_' + id);
+    
+    if (exito) {
+        // 1. Leemos los votos actuales directamente de la pantalla para sumar +1
+        let votos0 = parseInt(document.getElementById('percent-0')?.innerText.match(/\((\d+)\)/)?.[1] || 0);
+        let votos1 = parseInt(document.getElementById('percent-1')?.innerText.match(/\((\d+)\)/)?.[1] || 0);
+
+        // 2. Sumamos el voto al ganador
+        if (id === 0) votos0++;
+        if (id === 1) votos1++;
+
+        // 3. Recalculamos los nuevos porcentajes
+        let nuevoTotal = votos0 + votos1;
+        let pct0 = Math.round((votos0 / nuevoTotal) * 100);
+        let pct1 = Math.round((votos1 / nuevoTotal) * 100);
+
+        // 4. Inyectamos los nuevos resultados en las barras y textos
+        const bar0 = document.getElementById('bar-0');
+        const pctText0 = document.getElementById('percent-0');
+        if (bar0) bar0.style.width = pct0 + '%';
+        if (pctText0) pctText0.innerText = `${pct0}% (${votos0})`;
+
+        const bar1 = document.getElementById('bar-1');
+        const pctText1 = document.getElementById('percent-1');
+        if (bar1) bar1.style.width = pct1 + '%';
+        if (pctText1) pctText1.innerText = `${pct1}% (${votos1})`;
+
+        window.showToast("✅ ¡Gracias por tu voto en la nube!");
+    }
+    
+    elementoOpcion.classList.remove('procesando');
+};
 
     function renderZonaTuber() {
         const ytGrid = document.getElementById('youtube-grid');
