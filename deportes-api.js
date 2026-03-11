@@ -1,11 +1,34 @@
-/* ========================================================
-   MOTOR API YOUTUBE - GUNGO DEPORTES (Nivel Staff Blindado)
-   ======================================================== */
-(function() { // <-- APERTURA DEL ESCUDO DE SEGURIDAD
+(function() { // <-- 🛡️ INICIO DEL ESCUDO PROTECTOR
 
-    // 1. INICIALIZACIÓN DE FIREBASE (Esencial para que funcione la base de datos)
+    // Esperamos a que la página cargue para inicializar Firebase
+    window.addEventListener('load', function() {
+        var firebaseConfig = {
+            apiKey: "AIzaSyCumX5UWoZEgxz7iOOOR9OXQGG2YWDX7ik",
+            authDomain: "gungo-tv.firebaseapp.com",
+            projectId: "gungo-tv",
+            storageBucket: "gungo-tv.firebasestorage.app",
+            messagingSenderId: "132166094948",
+            appId: "1:132166094948:web:0ca391d2dc20306e85cf71"
+        };
+
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) { 
+            firebase.initializeApp(firebaseConfig); 
+            
+            // Retrasamos la autenticación medio segundo para evitar el error INTERNAL
+            setTimeout(() => {
+                firebase.auth().signInAnonymously()
+                  .then((userCredential) => {
+                    console.log("✅ Conexión Gungo Deportes segura con ID:", userCredential.user.uid);
+                  })
+                  .catch((error) => console.error("Error de acceso Firebase:", error.message));
+            }, 500);
+        }
+    });
+
+    // 3. DECLARACIÓN SEGURA DE VARIABLES...
+    const DEPORTES_YT_KEY = "AIzaSyCumX5UWoZEgxz7iOOOR9OXQGG2YWDX7ik"; 
     var firebaseConfig = {
-        apiKey: "AIzaSyCumX5UWoZEgxz7iOOOR9OXQGG2YWDX7ik",
+        apiKey: "AIzaSyBv849w6NNk_4QhOnaY3x7LOE38apvc6o4",
         authDomain: "gungo-tv.firebaseapp.com",
         projectId: "gungo-tv",
         storageBucket: "gungo-tv.firebasestorage.app",
@@ -92,7 +115,7 @@
         if (cacheActivo) return JSON.parse(cacheActivo);
 
         try {
-            const url = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&channelId=${channelId}&part=snippet,id&order=date&maxResults=4`;
+            const url = `https://www.googleapis.com/youtube/v3/search?key=${DEPORTES_YT_KEY}&channelId=${channelId}&part=snippet,id&order=date&maxResults=4`;
             const response = await fetch(url);
             
             if (!response.ok) {
@@ -149,8 +172,12 @@
                         <p class="summary">${vid.channel} • ${vid.date}</p>
                         <div class="card-meta" style="display:flex; justify-content:space-between; align-items:center;">
                             <button onclick="reproducirVideoAPI('${vid.id}', '${vid.title.replace(/'/g, "\\'")}')" class="watch-btn">Ver video ▶</button>
-                            <button onclick="registrarInteraccionSegura('interacciones_deportes', '${vid.id}', 'likes')" style="background:transparent; border:1px solid #FFEB3B; color:#FFEB3B; border-radius:50%; width:35px; height:35px; cursor:pointer; transition:0.3s;" onmouseover="this.style.background='#FFEB3B'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#FFEB3B';"><i class="fas fa-fire"></i></button>
-                        </div>
+
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="contador-${vid.id}" style="color: #fff; font-weight: 800; font-size: 1.1rem;">0</span>
+                           <button onclick="registrarInteraccionSegura('interacciones_deportes', '${vid.id}', 'likes')" style="background:transparent; border:1px solid #FFEB3B; color:#FFEB3B; border-radius:50%; width:35px; height:35px; cursor:pointer; transition:0.3s;" onmouseover="this.style.background='#FFEB3B'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#FFEB3B';"><i class="fas fa-fire"></i></button>
+                         </div>
+                     </div>
                     </div>
                 </div>`;
             });
@@ -220,6 +247,5 @@
     document.addEventListener("DOMContentLoaded", () => {
         window.checkCookieConsent();
     });
-
 
 })(); // <-- CIERRE DEL ESCUDO DE SEGURIDAD
