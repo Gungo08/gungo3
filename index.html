@@ -10,34 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="gungo.css">
-    <style>
-        /* ========================================================
-           BLINDAJE MÓVIL PARA BOTONES DE CABECERA (PRODUCCIÓN)
-           ======================================================== */
-        @media (max-width: 600px) {
-            header {
-                padding: 10px 2% !important;
-            }
-            header .filter-btn {
-                font-size: 0.65rem !important; /* Texto mucho más pequeño */
-                padding: 8px 10px !important; /* Reducción drástica del relleno */
-                gap: 4px !important;
-                letter-spacing: -0.5px !important; /* Acerca un poco las letras */
-            }
-            .logo-container img {
-                max-height: 35px !important; /* Logo más compacto para dar espacio */
-            }
-            /* Ocultar los emojis/iconos en pantallas muy estrechas para que quepa el texto */
-            @media (max-width: 380px) {
-                header .filter-btn i, 
-                header .filter-btn {
-                    font-size: 0.6rem !important;
-                    padding: 6px 8px !important;
-                }
-            }
-        }
-    </style>
-</head>
 </head>
 <body>
 
@@ -251,12 +223,13 @@
 <div class="side-social-bar">
     <a href="https://www.instagram.com/gungo.tv/" target="_blank" class="s-link insta"><i class="fab fa-instagram"></i></a>
     <a href="https://www.tiktok.com/@gungo.tv" target="_blank" class="s-link tiktok"><i class="fab fa-tiktok"></i></a>
-    <a href="https://www.youtube.com/@gungootv" target="_blank" class="s-link youtube"><i class="fab fa-youtube"></i></a>
+    <a href="https://www.youtube.com/@gungotv" target="_blank" class="s-link youtube"><i class="fab fa-youtube"></i></a>
     <a href="https://x.com/@gungotv" target="_blank" class="s-link twitter"><i class="fab fa-twitter"></i></a>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="gungo.js"></script>
 
 <script>
@@ -276,7 +249,16 @@
     }
 </script>
 
+<div id="cookie-shield" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: rgba(10, 10, 10, 0.95); border: 1px solid #FFEB3B; border-radius: 15px; padding: 20px; z-index: 99999; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(10px);">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="font-size: 1.5rem;">🍪</div>
+        <div style="flex: 1;">
+            <h4 style="color: #FFEB3B; margin: 0 0 5px 0; font-family: 'Poppins', sans-serif;">Gungo Privacy Shield</h4>
+            <p style="color: #ccc; font-size: 0.8rem; margin: 0; line-height: 1.4;">Usamos cookies técnicas para asegurar que tus votos y likes sean reales y para mejorar tu experiencia con videos VIP.</p>
+        </div>
+        <button onclick="aceptarCookiesGungo()" style="background: #FFEB3B; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.3s;">ACEPTAR</button>
+    </div>
+</div>
+
 </body>
 </html>
-
-
