@@ -943,4 +943,66 @@ document.addEventListener('DOMContentLoaded', () => {
         sincronizarContadoresGungo('encuestas');
         sincronizarContadoresGungo('interacciones_deportes');
     }, 500);
+
+});
+
+/* ========================================================
+   💬 MOTOR DE CHAT EN TIEMPO REAL (FIREBASE)
+   ======================================================== */
+window.sendGungoMessage = function() {
+    const input = document.getElementById('chat-input');
+    const texto = input.value.trim();
+    
+    // Si está vacío o no hay base de datos, no hacemos nada
+    if (!texto || typeof window.db === 'undefined' || !window.db) return;
+    
+    const usuario = localStorage.getItem('gungo_username') || 'UsuarioVIP';
+
+    // 1. Escribir en la base de datos de Google
+    window.db.collection('chat_live').add({
+        alias: usuario,
+        mensaje: texto,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(error => console.error("Error al enviar mensaje:", error));
+
+    // 2. Limpiar la caja de texto
+    input.value = '';
+};
+
+// 3. El Radar: Escuchar los mensajes en vivo
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (typeof window.db !== 'undefined' && window.db) {
+            window.db.collection('chat_live').orderBy('timestamp', 'asc').limit(50)
+            .onSnapshot((snapshot) => {
+                const chatBox = document.getElementById('chat-display');
+                if (!chatBox) return;
+                
+                // Reiniciamos la caja manteniendo el mensaje del sistema
+                chatBox.innerHTML = `
+                    <div style="background: rgba(255, 235, 59, 0.1); border-left: 4px solid #FFEB3B; padding: 15px; border-radius: 10px; text-align: center; font-size: 0.9rem; color: #fff;">
+                        <strong>🤖 Sistema:</strong> Bienvenido a Gungo Live. El respeto es obligatorio.
+                    </div>
+                `;
+
+                // Imprimimos los mensajes de la base de datos
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const esMio = data.alias === localStorage.getItem('gungo_username');
+                    
+                    chatBox.innerHTML += `
+                        <div style="text-align: ${esMio ? 'right' : 'left'}; margin-bottom: 10px;">
+                            <span style="font-size: 0.75rem; color: #FFEB3B; font-weight: bold;">${data.alias}</span><br>
+                            <div style="display: inline-block; background: ${esMio ? '#FFEB3B' : '#1a1a1a'}; color: ${esMio ? '#000' : '#fff'}; padding: 10px 15px; border-radius: 15px; border: 1px solid ${esMio ? '#FFEB3B' : '#333'};">
+                                ${data.mensaje}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Auto-scroll hacia el último mensaje
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+    }, 1000);
 });
