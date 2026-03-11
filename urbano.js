@@ -5,7 +5,7 @@
 
     // 1. INICIALIZACIÓN DE FIREBASE
     var firebaseConfig = {
-        apiKey: "AIzaSyBv849w6NNk_4QhOnaY3x7LOE38apvc6o4",
+        apiKey: "AIzaSyCumX5UWoZEgxz7iOOOR9OXQGG2YWDX7ik",
         authDomain: "gungo-tv.firebaseapp.com",
         projectId: "gungo-tv",
         storageBucket: "gungo-tv.firebasestorage.app",
@@ -317,7 +317,7 @@
                             <h3 class="card-title-fix">${news.title}</h3>
                             <p class="summary-text">${textoLimpio}</p>
                             <div class="reaction-bar">
-                                <button class="reaction-btn" onclick="window.darLikeUrbano('${uniqueId}', this, event)">🔥 <span>0</span></button>
+                                <button class="reaction-btn" onclick="window.darLikeUrbano('${uniqueId}', this, event)">🔥 <span id="contador-${uniqueId}">0</span></button>
                                 <button class="share-btn-card" onclick="event.stopPropagation(); window.shareNative('${news.title}', 'Gungo.tv')"><i class="fas fa-share"></i></button>
                             </div>
                         </div>

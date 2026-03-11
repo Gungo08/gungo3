@@ -5,7 +5,7 @@
 
     // 1. INICIALIZACIÓN DE FIREBASE
     var firebaseConfig = {
-        apiKey: "AIzaSyBv849w6NNk_4QhOnaY3x7LOE38apvc6o4",
+        apiKey: "AIzaSyCumX5UWoZEgxz7iOOOR9OXQGG2YWDX7ik",
         authDomain: "gungo-tv.firebaseapp.com",
         projectId: "gungo-tv",
         storageBucket: "gungo-tv.firebasestorage.app",
@@ -18,7 +18,7 @@
         firebase.initializeApp(firebaseConfig); 
     }
 
-    const db = (typeof firebase !== 'undefined') ? firebase.firestore() : null;
+    window.db = (typeof firebase !== 'undefined') ? firebase.firestore() : null;
 
     // 2. Activar validación de identidad anónima
     if (typeof firebase !== 'undefined') {
