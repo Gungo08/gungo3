@@ -594,7 +594,3 @@ footer { background-color: #000 !important; color: #fff !important; padding: 80p
     transition: opacity 0.3s;
 }
 .video-tile:hover::after { opacity: 1; }
-
-
-
-
