@@ -140,25 +140,26 @@
       "img": "logo-gungo3.png",
       "hasNew": true
     }
+   ],
+   "pollData": {
+  "id": "poll-rd-vzla-2026",
+  "question": "¿Quién ganará el duelo por el primer lugar del Grupo D en el Clásico Mundial de Béisbol 2026?",
+  "expiresAt": "2026-03-11T23:59:00Z",
+  "options": [
+    {
+      "text": "República Dominicana, poder caribeño ⚾🇩🇴",
+      "id": 0,
+      "votes": 5200
+    },
+    {
+      "text": "Venezuela, la Vinotinto del diamante ⚾🇻🇪",
+      "id": 1,
+      "votes": 4800
+    }
   ],
-  "pollData": {
-    "id": "poll-feb-2026",
-    "question": "¿Crees que la relación de Feid y Karol G llegue al altar en 2026?",
-    "expiresAt": "2026-12-31T23:59:00Z",
-    "options": [
-      {
-        "text": "Sí, boda segura 💍",
-        "id": 0,
-        "votes": 4500
-      },
-      {
-        "text": "No, eso es marketing 📉",
-        "id": 1,
-        "votes": 3200
-      }
-    ],
-    "footerText": "Más de 15k votos hoy."
-  },
+  "footerText": "Más de 20k votos hoy."
+ },
+
   "newsArticles": [
     {
       "id": 1772818851,
