@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: ["main"]
 
-# Motor moderno para evitar warnings (tu configuración actual)
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -15,59 +14,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Necesario para SonarQube y blame
+          fetch-depth: 0
 
-      # ==================== FRONTEND ====================
       - name: 🔧 Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: 📦 Instalar dependencias (usa tu package.json)
+      - name: 📦 Instalar dependencias
         run: npm ci
 
-      - name: 🛡️ Linting JS (usa tu eslint.config.mjs)
+      - name: 🛡️ Linting JS
         run: npx eslint . --config eslint.config.mjs
 
-      - name: 🛡️ Linting CSS (usa tu .stylelintrc.json)
+      - name: 🛡️ Linting CSS
         run: npx stylelint "**/*.css" --config .stylelintrc.json
 
-      - name: 🛡️ Escaneo HTML (HTMLHint + W3C)
+      - name: 🛡️ Escaneo HTML + W3C
         run: |
           npx htmlhint "**/*.html"
           curl -F "file=@privacidad.html" https://validator.w3.org/nu/?out=json > w3c-privacidad.json
 
-      # ==================== BACKEND PYTHON ====================
-      - name: 🐍 Setup Python 3.12 + dependencias
+      - name: 🐍 Setup Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: |
-          pip install pylint flake8 bandit pip-audit semgrep
 
       - name: 🛡️ Linting y seguridad Python
         run: |
+          pip install pylint flake8 bandit pip-audit
           pylint **/*.py --output-format=text > pylint.txt || true
           flake8 **/*.py > flake8.txt
           bandit -r . -f json > bandit.json
 
-      # ==================== SEGURIDAD GLOBAL (OWASP + NIST + PCI) ====================
       - name: "🔍 Escaneo de Secrets (NIST + PCI-DSS Req. 8.6.2)"
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
           extra_args: --only-verified --fail
 
-      - name: 🛡️ Semgrep - OWASP Top 10 2025-2026 (SAST rápido)
+      - name: 🛡️ Semgrep - OWASP Top 10
         uses: semgrep/semgrep-action@v1
         with:
-          config: p/owasp-top-ten  # Reglas oficiales 2025-2026
+          config: p/owasp-top-ten
           generateSarif: true
 
-      - name: 🛡️ SonarQube (NIST + OWASP + PCI compliance)
+      - name: 🛡️ SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -77,50 +72,29 @@ jobs:
             -Dsonar.projectKey=gungo-tv
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/venv/**,*.png
-            -Dsonar.python.version=3.12
 
-      - name: 🚦 SonarQube Quality Gate (falla si crítico OWASP/PCI)
+      - name: 🚦 SonarQube Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@v1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         timeout-minutes: 5
 
-      - name: 📦 Auditoría de Dependencias (PCI-DSS + NIST)
+      - name: 📦 Auditoría de Dependencias
         run: |
           npm audit --audit-level=high --json > npm-audit.json
           pip-audit --format json > pip-audit.json
 
-      # ==================== REPORTE CONSOLIDADO (un solo archivo) ====================
-      - name: 📋 Generar Reporte Final (OWASP + NIST + PCI)
+      - name: 📋 Generar Reporte Final
         run: |
           cat > reporte-final.md << EOF
           # 🛡️ Reporte de Seguridad - $(date)
-          ## Estado General
-          Pipeline ejecutado con estándares OWASP Top 10 2025, NIST SP 800-53 y PCI-DSS v4.0
-
-          ## Resultados
-          - ✅ JS/CSS/HTML: ESLint + Stylelint + HTMLHint + W3C
-          - ✅ Python: Pylint + Bandit
-          - ✅ Secrets: TruffleHog (NIST/PCI)
-          - ✅ OWASP: Semgrep (p/owasp-top-ten)
-          - ✅ Calidad + Compliance: SonarQube Quality Gate
-          - ✅ Dependencias: npm + pip audit
-
-          Descarga este archivo y revísalo. Si el pipeline falló → NO merges.
+          Pipeline ejecutado con estándares OWASP/NIST/PCI-DSS
+          Estado: Listo para producción si pasó todo.
           EOF
-          cat pylint.txt flake8.txt bandit.json npm-audit.json pip-audit.json >> reporte-final.md
 
-      - name: 📤 Subir Reporte como Artifact
-        uses: actions/checkout@v6
+      - name: 📤 Subir Reporte
+        uses: actions/upload-artifact@v4
         with:
-          name: 🔧 Setup Node.js 20
-          path: actions/setup-node@v6
-
-      # ==================== DESPLIEGUE (solo si todo pasa) ====================
-      - name: 🚀 Despliegue (solo si pasa todo)
-        if: success() && github.ref == 'refs/heads/main'
-        run: echo "✅ Todo seguro según OWASP/NIST/PCI → Despliegue autorizado"
-
-
-
+          name: reporte-seguridad-gungo
+          path: reporte-final.md
