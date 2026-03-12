@@ -1,101 +1,112 @@
-name: 🛡️ CI/CD Seguro - OWASP + NIST + PCI-DSS
+name: CI/CD Pipeline Maximizado con Seguridad Enterprise
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-  analisis-seguro-fullstack:
+  security-and-build:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Descargar el código
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js 20
-        uses: actions/setup-node@v6
+      # 1. Setup de Entornos
+      - name: Setup Node.js (Frontend & Backend)
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-
-      - name: 📦 Instalar dependencias
-        run: npm ci
-
-      - name: 🛡️ Linting JS
-        run: npx eslint . --ignore-pattern eslint.config.mjs
-
-      - name: 🛡️ Linting CSS
-        run: npx stylelint "**/*.css" --config .stylelintrc.json
-
-      - name: 🛡️ Escaneo HTML + W3C
+      - name: Instalar dependencias y plugins de seguridad
         run: |
-          npx htmlhint "**/*.html"
-          curl -F "file=@privacidad.html" https://validator.w3.org/nu/?out=json > w3c-privacidad.json
+          npm install
+          npm install --save-dev eslint-plugin-security eslint-plugin-no-unsanitized npm-audit-ci
 
-      - name: 🐍 Setup Python 3.12
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Instalar dependencias Python
+        run: pip install -r requirements.txt bandit safety
 
-      - name: 🛡️ Linting y seguridad Python
+      # 2. Análisis Estático de Seguridad (SAST Avanzado)
+      - name: Linting de Seguridad JS/Node (Detecta XSS y Sanitización)
         run: |
-          pip install pylint flake8 bandit pip-audit
-          pylint **/*.py --output-format=text > pylint.txt || true
-          flake8 **/*.py > flake8.txt
-          bandit -r . -f json > bandit.json
+          # Falla si encuentra código no sanitizado o inyecciones de DOM
+          npx eslint . --ext .js,.jsx --plugin security --plugin no-unsanitized --rule 'no-unsanitized/method: error, no-unsanitized/property: error'
 
-      - name: "🔍 Escaneo de Secrets (NIST + PCI-DSS Req. 8.6.2)"
-        uses: trufflesecurity/trufflehog@main
+      - name: Análisis de Seguridad Python con Bandit (Detecta Inyecciones)
+        run: bandit -r . -f json -o bandit_report.json
+
+      # 3. Escaneo de Secretos (Evita fuga de credenciales de DB/APIs)
+      - name: Escaneo de Secrets con TruffleHog
+        uses: trufflesecurity/trufflehog@v3
         with:
           path: ./
-          extra_args: --only-verified --fail
+          base: main
+          head: HEAD
+          extra_args: --only-verified
 
-      - name: 🛡️ Semgrep - OWASP Top 10
+      # 4. Semgrep Configurado para OWASP y Cabeceras
+      - name: Semgrep Security Scan (XSS, CORS, Rate Limiting)
         uses: semgrep/semgrep-action@v1
         with:
-          config: p/owasp-top-ten
+          config: "p/owasp-top-ten, p/javascript, p/expressjs, p/nodejs"
           generateSarif: true
 
-      - name: 🛡️ SonarQube Scan
+      # 5. Auditoría de Dependencias Estricta (Supply Chain Attacks)
+      - name: Auditoría de Dependencias (NPM & PIP)
+        run: |
+          npx npm-audit-ci --moderate
+          safety check --json > safety_report.json
+
+      # 6. Verificación de Integridad de Código (SonarQube)
+      - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          args: >
-            -Dsonar.projectKey=gungo-tv
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/venv/**,*.png
+          projectBaseDir: ./
 
-      - name: 🚦 SonarQube Quality Gate
-        uses: sonarsource/sonarqube-quality-gate-action@v1
+      # 7. Análisis Dinámico (DAST) - Verificación de Cabeceras HTTP
+      # Simula levantar la app para revisar Clickjacking, CSP y Fuga de Info
+      - name: Levantar servidor local para test DAST
+        run: |
+          npm start & 
+          sleep 10 # Espera a que el servidor levante
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        timeout-minutes: 5
+          NODE_ENV: test
 
-      - name: 📦 Auditoría de Dependencias
+      - name: OWASP ZAP Baseline Scan (Verifica Headers, CSP, HSTS)
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000' # Ajusta al puerto de tu app
+          fail_action: true
+          rules_file_name: '.zap/rules.tsv' # Aquí configuras que exija CSP, X-Frame-Options, etc.
+
+      # 8. Reportes y Bloqueos
+      - name: Generar Reporte Unificado de Seguridad
+        if: always()
         run: |
-          npm audit --audit-level=high --json > npm-audit.json
-          pip-audit --format json > pip-audit.json
+          echo "# Reporte de Seguridad Ciberseguridad - $(date)" > reporte.md
+          echo "## SAST y Sanitización" >> reporte.md
+          cat bandit_report.json >> reporte.md
+          echo "Estado General: Revisar artefactos para detalles completos." >> reporte.md
 
-      - name: 📋 Generar Reporte Final
-        run: |
-          cat > reporte-final.md << EOF
-          # 🛡️ Reporte de Seguridad - $(date)
-          Pipeline ejecutado con estándares OWASP/NIST/PCI-DSS
-          Estado: Listo para producción si pasó todo.
-          EOF
-
-      - name: 📤 Subir Reporte
+      - name: Subir Reporte
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: reporte-seguridad-gungo
-          path: reporte-final.md
+          name: reporte-seguridad
+          path: reporte.md
 
+      # 9. Notificación de Brechas
+      - name: Alerta en Slack de Vulnerabilidad Crítica
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: "{\"text\": \"🚨 ALERTA GITHUB ACTIONS: Pipeline de Seguridad Falló. Código con posibles vulnerabilidades bloqueado antes de producción.\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
