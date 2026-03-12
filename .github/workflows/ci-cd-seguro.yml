@@ -33,7 +33,6 @@ jobs:
       # 2. Análisis Estático de Seguridad (SAST Avanzado)
       - name: Linting de Seguridad JS/Node (Detecta XSS y Sanitización)
         run: |
-          # Falla si encuentra código no sanitizado o inyecciones de DOM
           npx eslint . --ext .js,.jsx --plugin security --plugin no-unsanitized --rule 'no-unsanitized/method: error, no-unsanitized/property: error'
 
       - name: Análisis de Seguridad Python con Bandit (Detecta Inyecciones)
@@ -41,10 +40,10 @@ jobs:
 
       # 3. Escaneo de Secretos (Evita fuga de credenciales de DB/APIs)
       - name: Escaneo de Secrets con TruffleHog
-        uses: trufflesecurity/trufflehog@v3
+        uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: main
+          base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified
 
@@ -71,20 +70,19 @@ jobs:
           projectBaseDir: ./
 
       # 7. Análisis Dinámico (DAST) - Verificación de Cabeceras HTTP
-      # Simula levantar la app para revisar Clickjacking, CSP y Fuga de Info
       - name: Levantar servidor local para test DAST
         run: |
           npm start & 
-          sleep 10 # Espera a que el servidor levante
+          sleep 10
         env:
           NODE_ENV: test
 
       - name: OWASP ZAP Baseline Scan (Verifica Headers, CSP, HSTS)
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: 'http://localhost:3000' # Ajusta al puerto de tu app
+          target: 'http://localhost:3000'
           fail_action: true
-          rules_file_name: '.zap/rules.tsv' # Aquí configuras que exija CSP, X-Frame-Options, etc.
+          rules_file_name: '.zap/rules.tsv'
 
       # 8. Reportes y Bloqueos
       - name: Generar Reporte Unificado de Seguridad
